@@ -1,0 +1,181 @@
+! Atomic radius derived from solvent electrostatic charge distribution
+! Tested with free energy perturbation with explicit solvent
+! Authors:  Mafalda Nina, Dmitrii Belogv, and Benoit Roux
+! University of Montreal, June 1996.
+! M. Nina and B. Roux. Atomic Radii for Continuum Electrostatics Calculations based on 
+! Molecular Dynamics Free Energy Simulations. J. Phys. Chem. B 101: 5239-5248 (1997).
+!
+
+! UPDATES:
+! --------
+! 1. PMF guided optimization of input radii for charged residues (2005)  
+!    ref: J. Chen, W. Im and C. L. Brooks III, JACS (submitted).
+!
+!
+! GLU and ASP modified December 1st, 1998 by Mafalda Nina
+!
+! Protonated histidine HSP has been included, January 1999 by Mafalda Nina
+! dG_elec = -68.15 kcal/mol (MD/FES) or -68.10 kcal/mol (PBEQ)
+!
+! TEA and ions added by Benoit Roux, January 1999.
+!
+! sodium added by Benoit Roux, November 2000
+
+
+!Atom            Residue           R_PB^0, A             Comment
+
+ZN               *                 1.3
+
+H*               *                 0.0                   ! Set to zero all H radii
+
+! Set heavy atoms to average default values
+C*               *                 2.3                   
+O*               *                 1.8
+N*               *                 2.3
+S*               *                 2.3
+
+!Patches CT3 N-Methylamide C-terminus
+!        ACE acetylated N-terminus (ACP for PRO)
+CAY              *                 2.06                   
+CAT              *                 2.06
+CY               *                 2.04
+OY               *                 1.52
+NT               *                 2.23
+OT*              *                 1.40                  ! for COO- terminus
+
+! Backbone
+C                *                 2.04                  ! for peptide bond
+O                *                 1.52                  ! for peptide bond
+N                *                 2.23                  ! for peptide bond
+CA               *                 2.86                  ! for all CA except GLY
+CA               GLY               2.38                  ! for all GLY CA
+
+! Carbons 
+CB               *                 2.67                  ! for all residues
+CG*              *                 2.46                  ! for ARG, GLN, ILE, LYS, MET, PHE, THR, TRP, VAL, HSP, HSD
+CG               GLU               2.77                  ! for GLU only
+CD*              *                 2.44                  ! for ARG, ILE, LEU, LYS
+CD               GLN               1.98
+CD               GLU               1.98
+CG               ASN               1.98
+CG               ASP               1.98
+CB               PRO               1.98
+CG               PRO               1.98
+CD               PRO               1.98
+CE*              TYR               2.00
+CD*              TYR               2.00
+CZ               TYR               2.00
+CE*              PHE               2.00
+CD*              PHE               2.00
+CZ               PHE               2.00
+CE*              TRP               1.78
+CD*              TRP               1.78
+CZ*              TRP               1.78
+CH2              TRP               1.78
+CE               MET               2.10
+CZ               ARG               2.80
+CE               LYS               2.80
+CE1              HSD               1.98
+CE1              HSP               1.98
+CE1              HIS               1.98
+CD2              HSD               1.98
+CD2              HSP               1.98
+CD2              HIS               1.98
+
+
+!Oxygens
+OE*              GLU               1.40
+OD*              GLU               1.40
+OE*              ASP               1.40
+OD*              ASP               1.40
+OE*              GLN               1.42
+OD*              GLN               1.42
+OE*              ASN               1.42
+OD*              ASN               1.42
+OG*              SER               1.64
+OG*              THR               1.64
+OH               TYR               1.85
+OH2              TIP3              2.20
+
+!Nitrogens
+NE2              HSD               1.80
+ND1              HSD               1.80
+NE2              HIS               1.80
+ND1              HIS               1.80
+NE2              HSP               2.30
+ND1              HSP               2.30
+NH*              ARG               2.13
+NE               ARG               2.13
+NZ               LYS               2.13
+NE2              GLN               2.15
+ND2              ASN               2.15
+NE1              TRP               2.40
+
+!Sulphur
+S*               *                 2.00                  ! for MET, CYS
+
+!Ions
+*                POT               2.035                 ! potassium ion K+
+*                CLA               2.035                 ! chloride ion Cl-
+*                SOD               1.66                  ! sodium ion Na+
+N                TEA               2.15                  ! Tetramethylamonium (TEA)
+C1               TEA               2.30
+C2               TEA               2.30
+C3               TEA               2.30
+C4               TEA               2.30
+C5               TEA               2.30
+C6               TEA               2.30
+C7               TEA               2.30
+C8               TEA               2.30
+              
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! PMF guided optimization of input radii for charged residues  !!
+!!                                                              !!
+!!   J. Chen, W. Im and C. L. Brooks III, JACS (submitted)      !!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! NOTE: should be used only with GBSW;
+!! NOTE: for optimal accuracy in peptide and protein conformational equilibrium,
+!!       the modified CMAP in "~toppar/gbsw/par_all22_prot_gbsw.inp" should be used.
+!!
+
+! ASP and GLU (no change)
+
+! LYS: 
+NZ               LYS               1.80
+
+! ARG:
+NH*              ARG               1.70
+NE               ARG               1.70
+CZ               ARG               2.20
+
+! GLN and ASN
+OE1              GLN               1.60
+OD1              ASN               1.60
+NE2              GLN               2.00
+ND2              ASN               2.00
+ 
+! HSD and HSP: hnd(1.8->1.9), hpnd/hpne(2.3->1.9)
+ND1              HSD               1.90
+ND1              HSP               1.90
+NE2              HSP               1.90
+
+! TRP: NE (2.4->1.8), C*(1.78->2.0)
+NE1              TRP               1.85
+CE*              TRP               2.00
+CD*              TRP               2.00
+CZ*              TRP               2.00
+CH2              TRP               2.00
+
+! backbone (bb6)
+N                *                 2.03                  ! 2.23
+NL               *                 2.03                  ! alad
+NR               *                 2.03                  ! alad
+
+! terminus
+NT               *                 2.03                  ! 2.23
+CGY              *                 2.77                  ! from GLU CG
+CAY              *                 2.67                  ! from CB
+CDY              *                 1.98                  ! from GLU CD
+OEY*             *                 1.40                  ! from GLU OE*
+OY               *                 1.52                  ! from backbone O
+CY               *                 2.04                  ! from backbone C

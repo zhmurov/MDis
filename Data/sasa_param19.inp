@@ -1,0 +1,25 @@
+# Solvation parameters for SASA
+# From P. Ferrara, J. Apostolakis, A. Calfisch. Proteins, 46:24-33 (2002)
+
+# Atom type   R_min(A)   R_i(A)   p_i   sigma_i(kcal/molA)   Description
+C      2.1      1.72     1.554     0.012   # Carbonyl carbon
+CH1E   2.365    1.80     1.276     0.012   # Extended aliphatic carbon with 1 hydrogen
+CH2E   2.235    1.90     1.045     0.012   # Extended aliphatic carbon with 2 hydrogens
+CH3E   2.165    2.00     0.880     0.012   # Extended aliphatic carbon with 3 hydrogens
+CR1E   2.1      1.80     1.073     0.012   # Extended aromatic carbon with 1 hydrogen
+CR     2.1      1.80     1.073     0.012   # Extended aromatic carbon with 1 hydrogen
+NH1    1.6      1.55     1.028    -0.060   # Amide nitrogen
+NR     1.6      1.55     1.028    -0.060   # Aromatic nitrogen with no hydrogens
+NH2    1.6      1.60     1.215    -0.060   # Nitrogen with two hydrogens
+NH3    1.6      1.60     1.215    -0.060   # Nitrogen with three hydrogens
+NC2    1.6      1.55     1.028    -0.060   # Guanidinium nitrogen
+N      1.6      1.55     1.028    -0.060   # Proline nitrogen
+OH1    1.6      1.52     1.080    -0.060   # Hydroxyl oxygen
+O      1.6      1.50     0.926    -0.060   # Carbonyl oxygen
+OC     1.6      1.70     0.922    -0.060   # Carboxyl oxygen
+S      1.89     1.80     1.121     0.012   # Sulphur
+SH1E   1.89     1.80     1.121     0.012   # Extended sulphur with 1 hydrogen
+H      0.8      1.10     1.128     0.000   # Polar hydrogen
+HC     0.6      1.10     1.128     0.000   # Polar hydrogen (in Arg, Lys and N-term)
+
+
