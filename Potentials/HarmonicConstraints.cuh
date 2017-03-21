@@ -14,6 +14,8 @@ int harmonicConstraintsBlockCount;
 
 typedef struct {
 	float Ks; // K-spring for constraint, kJ/mol/nm^2
+	float maxF;
+	bool limitForce;
 	float4* h_fixedConstraints; // (x,y,z) --- desired coordinates of atom, w --- spring constant
 	float4* d_fixedConstraints;
 	int maxRelativeConstraintsPerAtom;

@@ -37,6 +37,11 @@ void init(){
 
 	harmonicConstraintsData.Ks = getFloatParameter(PARAMETER_CONSTRAINTS_KS);
 
+	if(getYesNoParameter(PARAMETER_CONSTRAINTS_LIMIT_FORCE, 0)){
+		harmonicConstraintsData.limitForce = true;
+		harmonicConstraintsData.maxF = getFloatParameter(PARAMETER_CONSTRAINTS_MAX_FORCE);
+	}
+
 	allocateCPU((void**)&harmonicConstraintsData.h_fixedConstraints, gsystem.Ntot*sizeof(float4));
 	allocateGPU((void**)&harmonicConstraintsData.d_fixedConstraints, gsystem.Ntot*sizeof(float4));
 
@@ -250,8 +255,52 @@ __global__ void harmonicConstraintsPotential_kernel(){
 	}
 }
 
+__global__ void harmonicConstraintsLimitedForcePotential_kernel(){
+	int d_i = blockIdx.x*blockDim.x + threadIdx.x;
+	if(d_i < c_gsystem.Ntot){
+		float4 coord = tex1Dfetch(t_coord, d_i);
+		float4 f = c_gsystem.d_forces[d_i];
+		float4 r2 = c_harmonicConstraintsData.d_fixedConstraints[d_i];
+		float r;
+		if(r2.w != 0.0f){
+			r2.x -= coord.x;
+			r2.y -= coord.y;
+			r2.z -= coord.z;
+			DO_PBC(r2);
+			r = abs(r2);
+			f.x += r2.w*r2.x;
+			f.y += r2.w*r2.y;
+			f.z += r2.w*r2.z;
+		}
+		int i;
+		for(i = 0; i < c_harmonicConstraintsData.d_relativeConstraintsCount[d_i]; i++){
+			int j = c_harmonicConstraintsData.d_relativeConstraints[i*c_gsystem.widthTot + d_i];
+			r2 =  tex1Dfetch(t_coord, j);//c_gsystem.d_coord[bond.j];
+			r2.w = c_harmonicConstraintsData.d_relativeConstraintsData[i*c_gsystem.widthTot + d_i];
+			r2.x -= coord.x;
+			r2.y -= coord.y;
+			r2.z -= coord.z;
+			DO_PBC(r2);
+			r = abs(r2);
+			float mult = c_harmonicConstraintsData.Ks*(r - r2.w);
+			if(mult > c_harmonicConstraintsData.maxF){
+				mult = c_harmonicConstraintsData.maxF;
+			}
+			mult /= r;
+			f.x += mult*r2.x;
+			f.y += mult*r2.y;
+			f.z += mult*r2.z;
+		}
+		c_gsystem.d_forces[d_i] = f;
+	}
+}
+
 inline void compute(){
-	harmonicConstraintsPotential_kernel<<<harmonicConstraintsBlockCount, harmonicConstraintsBlockSize>>>();
+	if(harmonicConstraintsData.limitForce){
+		harmonicConstraintsLimitedForcePotential_kernel<<<harmonicConstraintsBlockCount, harmonicConstraintsBlockSize>>>();
+	} else {
+		harmonicConstraintsPotential_kernel<<<harmonicConstraintsBlockCount, harmonicConstraintsBlockSize>>>();
+	}
 }
 
 void destroy(){
