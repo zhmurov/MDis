@@ -256,9 +256,11 @@
 
 #define PARAMETER_CONSTRAINTS_ENABLED		"constraints"
 #define PARAMETER_CONSTRAINTS_REF_FILENAME	"constraintsfile"
-#define PARAMETER_CONSTRAINTS_KS			"constraintsks"
-#define PARAMETER_CONSTRAINTS_GROUP			"constraintsgroup"
+#define PARAMETER_CONSTRAINTS_KS		"constraintsks"
+#define PARAMETER_CONSTRAINTS_GROUP		"constraintsgroup"
 #define PARAMETER_CONSTRAINTS_CUTOFF		"constraintscutoff"
+#define PARAMETER_CONSTRAINTS_LIMIT_FORCE	"constraintslimitforce"
+#define PARAMETER_CONSTRAINTS_MAX_FORCE		"constraintsmaxforce"
 
 #define PARAMETER_VALUE_CONSTRAINTS_GROUP_IN	"in"
 #define PARAMETER_VALUE_CONSTRAINTS_GROUP_BW	"bw"
