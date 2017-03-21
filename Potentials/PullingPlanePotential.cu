@@ -193,6 +193,7 @@ void initWorkList()
 	//1tr
 	//traj = 0;
 	//ntr
+
 	for(traj = 0; traj < parameters.Ntr; traj++)
 	{
 		for(i = 0; i < gsystem.N; i++)
@@ -219,14 +220,44 @@ void initWorkList()
 		}
 	}
 
-	for(i = 0; i < potentialData.Ntotal; i++)
+	if(getYesNoParameter(PARAMETER_PULLING_PLANE_USE_PDB, 0))
 	{
-		j = potentialData.h_workList[i].atomID;
-		d.x = potentialData.planePoint.x - gsystem.h_coord[j].x;
-		d.y = potentialData.planePoint.y - gsystem.h_coord[j].y;
-		d.z = potentialData.planePoint.z - gsystem.h_coord[j].z;
-		potentialData.h_workList[i].bDistance = d.x*potentialData.planeNorm.x + d.y*potentialData.planeNorm.y + d.z*potentialData.planeNorm.z;
+		float3* refCoords = (float3*)calloc(gsystem.Ntot, sizeof(float3));
+		PDB refPDB;
+		char trajnum[10];
+		char* refPDBFilename = (char*)calloc(PARAMETER_LENGTH, sizeof(char));
+		for(traj = 0; traj < parameters.Ntr; traj++)
+		{
+			sprintf(trajnum, "%d", traj + parameters.firstrun);
+			getMaskedParameterWithReplacement(refPDBFilename, PARAMETER_PULLING_PLANE_COORDS_PDB, trajnum, "<run>");
+			readPDB(refPDBFilename, &refPDB);
+			for(i = 0; i < gsystem.N; i++)
+			{
+				itot = i + traj*gsystem.N;
+				refCoords[itot].x = refPDB.atoms[i].x;
+				refCoords[itot].y = refPDB.atoms[i].y;
+				refCoords[itot].z = refPDB.atoms[i].z;
+			}
+		}
+		for(i = 0; i < potentialData.Ntotal; i++)
+		{
+			j = potentialData.h_workList[i].atomID;
+			d.x = potentialData.planePoint.x - refCoords[j].x;
+			d.y = potentialData.planePoint.y - refCoords[j].y;
+			d.z = potentialData.planePoint.z - refCoords[j].z;
+			potentialData.h_workList[i].bDistance = d.x*potentialData.planeNorm.x + d.y*potentialData.planeNorm.y + d.z*potentialData.planeNorm.z;
+		}
+	} else {
+		for(i = 0; i < potentialData.Ntotal; i++)
+		{
+			j = potentialData.h_workList[i].atomID;
+			d.x = potentialData.planePoint.x - gsystem.h_coord[j].x;
+			d.y = potentialData.planePoint.y - gsystem.h_coord[j].y;
+			d.z = potentialData.planePoint.z - gsystem.h_coord[j].z;
+			potentialData.h_workList[i].bDistance = d.x*potentialData.planeNorm.x + d.y*potentialData.planeNorm.y + d.z*potentialData.planeNorm.z;
+		}
 	}
+
 }
 
 __global__ void computePlanePulling_kernel()
