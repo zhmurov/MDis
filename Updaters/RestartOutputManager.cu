@@ -88,7 +88,7 @@ void init(){
 	}
 
 	int i;
-	if(restartFileFormat == FILETYPE_PDB){
+	//if(restartFileFormat == FILETYPE_PDB){ // Does not work if filetypes are different for restart and final coordinates/velocities
 		pdbOutputData.atomCount = gsystem.N;
 		pdbOutputData.ssCount = 0;
 		allocateCPU((void**)&pdbOutputData.atoms, gsystem.N*sizeof(PDBAtom));
@@ -105,14 +105,14 @@ void init(){
 			pdbOutputData.atoms[i].y = 0.0;
 			pdbOutputData.atoms[i].z = 0.0;
 		}
-	} else
-	if(restartFileFormat == FILETYPE_XYZ){
+	//} else
+	//if(restartFileFormat == FILETYPE_XYZ){
 		xyzOutputData.atomCount = gsystem.N;
 		allocateCPU((void**)&xyzOutputData.atoms, gsystem.N*sizeof(XYZAtom));
 		for(i = 0; i < gsystem.N; i++){
 			xyzOutputData.atoms[i].name = topology.atoms[i].name[0];
 		}
-	}
+	//}
 	LOG << "Done intializing restart/final coordinates and velocities output.";
 
 }
