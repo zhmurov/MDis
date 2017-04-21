@@ -113,6 +113,7 @@ void init(){
 							if(cutoff == 0.0f || dr.w < cutoff){
 								harmonicConstraintsData.h_relativeConstraintsCount[i] ++;
 								harmonicConstraintsData.h_relativeConstraintsCount[j] ++;
+								relativeConstraintsCount ++;
 							}
 					}
 				}
@@ -200,6 +201,21 @@ void init(){
 					}
 				}
 			}
+		}
+	}
+
+	int traj;
+	for(traj = 1; traj < parameters.Ntr; traj++){
+		for(i = 0; i < gsystem.N; i++){
+			int itot = traj*gsystem.N + i;
+			harmonicConstraintsData.h_fixedConstraints[itot] = harmonicConstraintsData.h_fixedConstraints[i];
+	
+			harmonicConstraintsData.h_relativeConstraintsCount[itot] = harmonicConstraintsData.h_relativeConstraintsCount[i];
+			int c;
+			for(c = 0; c < harmonicConstraintsData.h_relativeConstraintsCount[itot]; c++){
+				harmonicConstraintsData.h_relativeConstraints[c*gsystem.widthTot + itot] = harmonicConstraintsData.h_relativeConstraints[c*gsystem.widthTot + i] + traj*gsystem.N;
+				harmonicConstraintsData.h_relativeConstraintsData[c*gsystem.widthTot + itot] = harmonicConstraintsData.h_relativeConstraintsData[c*gsystem.widthTot + i];
+			}			
 		}
 	}
 
