@@ -3,7 +3,11 @@
  *
  *  Created on: May 24, 2009
  *      Author: zhmurov
- */
+ *  Changes: 16.08.2016
+ *	Author: kir_min
+ *  Changes: 03.04.2017
+ *  	Author: ilya_kir
+*/
 
 #pragma once
 
@@ -54,6 +58,7 @@ typedef struct {
 	int k;
 	int l;
 	int func;
+	int parCount;
 	float c0;
 	float c1;
 	float c2;
@@ -61,17 +66,28 @@ typedef struct {
 } TOPDihedral;
 
 typedef struct {
+	int i;
+	int j;
+	int func;
+} TOPExclusion;
+
+typedef struct {
 	int atomCount;
 	int bondCount;
 	int pairsCount;
 	int angleCount;
 	int dihedralCount;
+	int exclusionCount;
 	TOPAtom* atoms;
 	TOPPair* bonds;
 	TOPPair* pairs;
 	TOPAngle* angles;
 	TOPDihedral* dihedrals;
+	TOPExclusion* exclusions;
+
+	int* ids;
 } TOPData;
 
-extern int readTOP(char* filename, TOPData* topData);
-extern int writeTOP(char* filename, TOPData* topData);
+extern int readTOP(const char* filename, TOPData* topData);
+extern void writeTOP(const char* filename, TOPData* topData);
+extern int getIndexInTOP(int nr, TOPData* topData);
