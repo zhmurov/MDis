@@ -213,6 +213,10 @@
 #define PARAMETER_REPULSIVE_BOUNDARY_SIGMA	 	"boundarysigma"
 #define PARAMETER_REPULSIVE_BOUNDARY_PDB		"boundaryfile"
 
+#define PARAMETER_FRAGMEM_POTENTIAL_ON			"fragmem"
+#define PARAMETER_FRAGMEM_FILE					"fragmemfile"
+#define PARAMETER_FRAGMEM_STRENGTH				"fragmemstrength"
+
 #define PARAMETER_PBC_ON                        "pbc"
 #define PARAMETER_PBC_LX                        "pbc_lx"
 #define PARAMETER_PBC_LY                        "pbc_ly"
@@ -342,6 +346,8 @@
 #define ENERGY_OUTPUT_NAME_GB				"GB"
 #define ENERGY_OUTPUT_NAME_SA				"SA"
 #define ENERGY_OUTPUT_NAME_SC				"StrConstr"
+
+#define ENERGY_OUTPUT_NAME_FRAGMEM			"FragMem"
 
 #define ENERGY_OUTPUT_NAME_TEMPERATURE		"Temperature"
 #define ENERGY_OUTPUT_NAME_POTENTIAL		"TOTAL"

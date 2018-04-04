@@ -30,6 +30,7 @@
 #include "../Potentials/PullingPlanePotential.cu"
 #include "../Potentials/PushingPlanePotential.cu"
 #include "../Potentials/DrumPotential.cu"
+#include "../Potentials/FragmemPotential.cu"
 #include "../Updaters/CoordinatesOutputManagerDCD.cu"
 #include "../Updaters/EnergyOutputManager.cu"
 #include "../Updaters/PairsListsUpdater.cu"
@@ -103,8 +104,97 @@ void launchRestarters(FILE* keyf) {
 	}
 }
 
+void dumpTOP(){
+	TOPData top;
+	top.atomCount = topology.atomCount;
+	top.atoms = (TOPAtom*)calloc(top.atomCount, sizeof(TOPAtom));
+	int i;
+	for(i = 0; i < topology.atomCount; i++){
+		top.atoms[i].id = topology.atoms[i].id;
+		sprintf(top.atoms[i].type, "%d", topology.atoms[i].typeId);
+		top.atoms[i].resid = topology.atoms[i].resid;
+		sprintf(top.atoms[i].resName, "%s", topology.atoms[i].resName);
+		sprintf(top.atoms[i].name, "%s", topology.atoms[i].name);
+		top.atoms[i].chain = topology.atoms[i].segment[0];
+		top.atoms[i].charge = topology.atoms[i].charge;
+		top.atoms[i].mass = topology.atoms[i].mass;
+	}
+	top.bondCount = topology.bondCount;
+	top.bonds = (TOPPair*)calloc(top.bondCount, sizeof(TOPPair));
+	int b;
+	for(b = 0; b < topology.bondCount; b++){
+		top.bonds[b].i = topology.bonds[b].i;
+		top.bonds[b].j = topology.bonds[b].j;
+		top.bonds[b].func = 1;
+		top.bonds[b].c0 = topology.bonds[b].b0;
+		top.bonds[b].c1 = topology.bonds[b].kb;
+	}
+	top.angleCount = topology.angleCount;
+	top.angles = (TOPAngle*)calloc(top.angleCount, sizeof(TOPAngle));
+	int a;
+	for(a = 0; a < top.angleCount; a++){
+		top.angles[a].i = topology.angles[a].i;
+		top.angles[a].j = topology.angles[a].j;
+		top.angles[a].k = topology.angles[a].k;
+		top.angles[a].func = 1;
+		top.angles[a].c0 = topology.angles[a].theta0*180.0/M_PI;
+		top.angles[a].c1 = topology.angles[a].ktheta;
+	}
+	int dihedralCount = 0;
+	int d;
+	for(d = 0; d < topology.dihedralCount; d++){
+		dihedralCount += topology.dihedrals[d].multiplicity;
+	}
+	for(d = 0; d < topology.improperCount; d++){
+		dihedralCount += topology.impropers[d].multiplicity;
+	}
+	top.dihedralCount = dihedralCount;
+	top.dihedrals = (TOPDihedral*)calloc(top.dihedralCount, sizeof(TOPDihedral));
+
+	dihedralCount = 0;
+	for(d = 0; d < topology.dihedralCount; d++){
+		for(i = 0; i < topology.dihedrals[d].multiplicity; i++){
+			top.dihedrals[dihedralCount].i = topology.dihedrals[d].i;
+			top.dihedrals[dihedralCount].j = topology.dihedrals[d].j;
+			top.dihedrals[dihedralCount].k = topology.dihedrals[d].k;
+			top.dihedrals[dihedralCount].l = topology.dihedrals[d].l;
+			top.dihedrals[dihedralCount].func = 1;
+			top.dihedrals[dihedralCount].parCount = 3;
+			top.dihedrals[dihedralCount].c0 = topology.dihedrals[d].delta[i]*180.0/M_PI;
+			top.dihedrals[dihedralCount].c1 = topology.dihedrals[d].kchi[i];
+			top.dihedrals[dihedralCount].c2 = topology.dihedrals[d].n[i];
+			dihedralCount++;
+		}
+	}
+	for(d = 0; d < topology.improperCount; d++){
+		for(i = 0; i < topology.impropers[d].multiplicity; i++){
+			top.dihedrals[dihedralCount].i = topology.impropers[d].i;
+			top.dihedrals[dihedralCount].j = topology.impropers[d].j;
+			top.dihedrals[dihedralCount].k = topology.impropers[d].k;
+			top.dihedrals[dihedralCount].l = topology.impropers[d].l;
+			top.dihedrals[dihedralCount].func = 2;
+			top.dihedrals[dihedralCount].parCount = 2;
+			top.dihedrals[dihedralCount].c0 = topology.impropers[d].psi0[i]*180.0/M_PI;
+			top.dihedrals[dihedralCount].c1 = topology.impropers[d].kpsi[i];
+			//top.dihedrals[dihedralCount].c2 = topology.impropers[d].n[i];
+			dihedralCount++;
+		}
+	}
+	top.exclusionCount = topology.exclusionsCount;
+	top.exclusions = (TOPExclusion*)calloc(top.exclusionCount, sizeof(TOPExclusion));
+	int e;
+	for(e = 0; e < top.exclusionCount; e++){
+		top.exclusions[e].i = topology.exclusions[e].i;
+		top.exclusions[e].j = topology.exclusions[e].j;
+		top.exclusions[e].func = 1;
+	}
+	top.pairsCount = 0;
+	writeTOP("dump.top", &top);
+}
+
 
 void initGPU(){
+	dumpTOP();
 	LOG << "Preparing system on a GPU...";
 	if (parameters.device >= 0) {
 		cudaSetDevice(parameters.device);
@@ -288,6 +378,9 @@ void initGPU(){
 	drum_potential::create();
 	checkCUDAError("init Drum potential");
 
+	fragmem_potential::create();
+	checkCUDAError("init FragMem potential");
+
 	coordinates_output_dcd::create();
 	checkCUDAError("init DCD output manager");
 	energy_output::create();
@@ -339,6 +432,13 @@ void compute(){
 				potentials[p]->compute();
 				checkCUDAError(potentials[p]->name);
 			}
+			/*cudaMemcpy(gsystem.h_forces, gsystem.d_forces, gsystem.Ntot*sizeof(float4), cudaMemcpyDeviceToHost);
+			FILE* out = fopen("forces.dat", "w");
+			for(i = 0; i < gsystem.N; i++){
+				fprintf(out, "%d\t%f\t%f\t%f\n", i, gsystem.h_forces[i].x, gsystem.h_forces[i].y, gsystem.h_forces[i].z);
+			}
+			fclose(out);
+			exit(0);*/
             step++;
 			cudaThreadSynchronize();
 			integrator->integrate();
