@@ -40,6 +40,8 @@ bool isExchangesDisabled; // [for debug] Do not exchange any replicas if set
 size_t updatesCount; // number of calls to update()
 size_t heatUpdatesLimit; // number of calls to update() for heating
 
+float gamma;
+
 Potential potential;
 Updater updater;
 

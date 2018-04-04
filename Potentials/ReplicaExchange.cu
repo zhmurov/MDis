@@ -72,9 +72,11 @@ void create() {
 	float Tmax = getFloatParameter(PARAMETER_REMD_MAX_TEMPERATURE);
 	float dT = (Tmax - Tmin) / numberOfTrajectories();
 	replica.resize(numberOfTrajectories());
+	LOG << "REMD Temperatures:";
 	for (int traj = 0; traj < numberOfTrajectories(); traj++) {
 		replica[traj].id = traj;
 		replica[traj].Tmax = Tmin + dT * traj;
+		LOG << replica[traj].id << ": " << replica[traj].Tmax;
 		if (isHeatModeEnabled())
 			replica[traj].T = 0;
 		else
@@ -84,6 +86,8 @@ void create() {
 	localReplica = &replica[mpiRank() * parameters.Ntr];
 
 	refreshVars();
+
+	gamma = getFloatParameter(PARAMETER_DAMPING, DEFAULT_DAMPING);
 
 	// Initialize potential
 	potential.compute = compute;
@@ -104,7 +108,7 @@ void create() {
 	LOG << "create done";
 }
 
-__global__ void compute_kernel(float* var) {
+__global__ void compute_kernel(float* var, float gamma) {
 	int i = blockIdx.x*blockDim.x + threadIdx.x;
 	if (i < c_gsystem.Ntot) {
 		float4 f = c_gsystem.d_forces[i];
@@ -115,17 +119,29 @@ __global__ void compute_kernel(float* var) {
 		// However, I'm not sure that it is possible to allocate constant memory dynamically - we don't know in advance how many trajectories we will have
 		// Texture memory is cached spatially, so some cache will be wasted if texture is used here.
 		// I think texture is the best choice here though.
-		float mult = var[i / c_gsystem.N] * sqrtf(f.w);
+
+
+		/*float mult = var[i / c_gsystem.N] * sqrtf(f.w);
 		float4 rf = hybrid_taus::rforce(i);
 		f.x += mult * rf.x;
 		f.y += mult * rf.y;
 		f.z += mult * rf.z;
+		c_gsystem.d_forces[i] = f;*/
+
+
+		float4 v = c_gsystem.d_vel[i];
+		float mgamma = f.w*gamma;
+		float mult = var[i / c_gsystem.N] * sqrtf(f.w);
+		float4 rf = hybrid_taus::rforce(i);
+		f.x += mult*rf.x - mgamma*v.x;
+		f.y += mult*rf.y - mgamma*v.y;
+		f.z += mult*rf.z - mgamma*v.z;
 		c_gsystem.d_forces[i] = f;
 	}
 }
 
 void inline compute() {
-	compute_kernel<<<blockCount, blockSize>>>(d_var);
+	compute_kernel<<<blockCount, blockSize>>>(d_var, gamma);
 }
 
 void destroy() {}
