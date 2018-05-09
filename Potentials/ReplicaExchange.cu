@@ -184,7 +184,7 @@ void logExchangeReplicas(int i, int j) {
 	if (first) {
 		first = false;
 		// Get and save filename for exchanges
-		fileName = getParameterAs<std::string>(PARAMETER_REMD_EXCHANGESFILE, "");
+		fileName = getMaskedParameterAs<std::string>(PARAMETER_REMD_EXCHANGESFILE, "");
 		// Clear file (we are going to append text to the end of it)
 		if (!fileName.empty())
 			std::ofstream(fileName.c_str());
