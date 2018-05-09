@@ -16,7 +16,7 @@ typedef struct __align__(16) {
 	int j;
 	float r0;
 	float oneOverSigma2;
-	int weight;
+	float weight;
 } GFragmemPair;
 
 typedef struct {

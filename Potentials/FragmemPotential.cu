@@ -102,7 +102,7 @@ void init(){
 		pch = strtok(NULL, " \t");
 		float r0 = atof(pch) / 10.0f;
 		pch = strtok(NULL, " \t");
-		int weight = atoi(pch);
+		float weight = atof(pch);
 		pch = strtok(NULL, " \t");
 		float sigma = atof(pch) / 10.0f;
 		float oneOverSigma2 = 1.0f/(sigma*sigma);
@@ -177,7 +177,7 @@ __global__ void fragmemPotential_kernel(){
 			float mult1 = dr*fragmem.oneOverSigma2;
 			float arg = -0.5f*dr*mult1;
 
-			mult = c_fragmemData.strength*expf(arg)*mult1/r;
+			mult = c_fragmemData.strength*fragmem.weight*expf(arg)*mult1/r;
 
 			f.x += mult*r2.x;
 			f.y += mult*r2.y;
@@ -222,7 +222,7 @@ __global__ void fragmemPotentialEnergy_kernel(){
 			float dr = r - fragmem.r0;
 			float arg = -0.5f*dr*dr*fragmem.oneOverSigma2;
 
-			pot += -c_fragmemData.strength*expf(arg);
+			pot += -c_fragmemData.strength*fragmem.weight*expf(arg);
 		}
 		c_fragmemData.d_fragmemEnergy[d_i] = pot;
 	}
