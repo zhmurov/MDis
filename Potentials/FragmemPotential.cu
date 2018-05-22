@@ -50,32 +50,43 @@ void init(){
 
 	fragmemData.strength = getFloatParameter(PARAMETER_FRAGMEM_STRENGTH);
 
-	for(i = 0; i < gsystem.N; i++){
+	for(i = 0; i < gsystem.Ntot; i++){
 		fragmemData.h_fragmemCount[i] = 0;
 	}
 
 	char* pch;
 	char filename[1024];
-	getMaskedParameter(filename, PARAMETER_FRAGMEM_FILE);
 	char buffer[BUF_SIZE];
-	FILE* file = fopen(filename, "r");
-	if(file == NULL){
-		LOG << "Fragment memory file '" << filename << "' not found";
-		exit(0);
-	}
+	FILE* file;
 
-	while(fgets(buffer, BUF_SIZE, file) != NULL){
-		pch = strtok(buffer, " \t");
-		i = atoi(pch);
-		pch = strtok(NULL, " \t");
-		j = atoi(pch);
-		fragmemData.h_fragmemCount[i] ++;
-		fragmemData.h_fragmemCount[j] ++;
-	}
-
-
+	int traj;
+	char trajnum[10];
 	fragmemData.maxFragmemsPerAtom = 0;
-	for(i = 0; i < gsystem.N; i++){
+	int itot, jtot;
+	for(traj = 0; traj < parameters.Ntr; traj++){
+		sprintf(trajnum, "%d", traj + parameters.firstrun);
+		getMaskedParameterWithReplacement(filename, PARAMETER_FRAGMEM_FILE,
+				trajnum, "<run>");
+		file = safe_fopen(filename, "r");
+		if(file == NULL){
+			LOG << "Fragment memory file '" << filename << "' not found";
+			exit(0);
+		}
+
+		while(fgets(buffer, BUF_SIZE, file) != NULL){
+			pch = strtok(buffer, " \t");
+			i = atoi(pch);
+			itot = i + traj*gsystem.N;
+			pch = strtok(NULL, " \t");
+			j = atoi(pch);
+			jtot = j + traj*gsystem.N;
+			fragmemData.h_fragmemCount[itot] ++;
+			fragmemData.h_fragmemCount[jtot] ++;
+		}
+		fclose(file);
+	}
+
+	for(i = 0; i < gsystem.Ntot; i++){
 		if(fragmemData.h_fragmemCount[i] > fragmemData.maxFragmemsPerAtom){
 			fragmemData.maxFragmemsPerAtom = fragmemData.h_fragmemCount[i];
 		}
@@ -88,63 +99,57 @@ void init(){
 	allocateGPU((void**)&fragmemData.d_fragmems,
 			gsystem.widthTot*fragmemData.maxFragmemsPerAtom*sizeof(GFragmemPair));
 
-	rewind(file);
 
-	for(i = 0; i < gsystem.N; i++){
+	for(i = 0; i < gsystem.Ntot; i++){
 		fragmemData.h_fragmemCount[i] = 0;
 	}
 
-	while(fgets(buffer, BUF_SIZE, file) != NULL){
-		pch = strtok(buffer, " \t");
-		i = atoi(pch);
-		pch = strtok(NULL, " \t");
-		j = atoi(pch);
-		pch = strtok(NULL, " \t");
-		float r0 = atof(pch) / 10.0f;
-		pch = strtok(NULL, " \t");
-		float weight = atof(pch);
-		pch = strtok(NULL, " \t");
-		float sigma = atof(pch) / 10.0f;
-		float oneOverSigma2 = 1.0f/(sigma*sigma);
+	for(traj = 0; traj < parameters.Ntr; traj++){
+		sprintf(trajnum, "%d", traj + parameters.firstrun);
+		getMaskedParameterWithReplacement(filename, PARAMETER_FRAGMEM_FILE,
+				trajnum, "<run>");
+		file = safe_fopen(filename, "r");
+		if(file == NULL){
+			LOG << "Fragment memory file '" << filename << "' not found";
+			exit(0);
+		}
 
-		fragmemData.h_fragmems[fragmemData.h_fragmemCount[i]*gsystem.widthTot + i].j = j;
-		fragmemData.h_fragmems[fragmemData.h_fragmemCount[i]*gsystem.widthTot + i].r0 = r0;
-		fragmemData.h_fragmems[fragmemData.h_fragmemCount[i]*gsystem.widthTot + i].oneOverSigma2 = oneOverSigma2;
-		fragmemData.h_fragmems[fragmemData.h_fragmemCount[i]*gsystem.widthTot + i].weight = weight;
+		while(fgets(buffer, BUF_SIZE, file) != NULL){
+			pch = strtok(buffer, " \t");
+			i = atoi(pch);
+			itot = i + traj*gsystem.N;
+			pch = strtok(NULL, " \t");
+			j = atoi(pch);
+			jtot = j + traj*gsystem.N;
+			pch = strtok(NULL, " \t");
+			float r0 = atof(pch) / 10.0f;
+			pch = strtok(NULL, " \t");
+			float weight = atof(pch);
+			pch = strtok(NULL, " \t");
+			float sigma = atof(pch) / 10.0f;
+			float oneOverSigma2 = 1.0f/(sigma*sigma);
 
-		fragmemData.h_fragmems[fragmemData.h_fragmemCount[j]*gsystem.widthTot + j].j = i;
-		fragmemData.h_fragmems[fragmemData.h_fragmemCount[j]*gsystem.widthTot + j].r0 = r0;
-		fragmemData.h_fragmems[fragmemData.h_fragmemCount[j]*gsystem.widthTot + j].oneOverSigma2 = oneOverSigma2;
-		fragmemData.h_fragmems[fragmemData.h_fragmemCount[j]*gsystem.widthTot + j].weight = weight;
+			fragmemData.h_fragmems[fragmemData.h_fragmemCount[itot]*gsystem.widthTot + itot].j = jtot;
+			fragmemData.h_fragmems[fragmemData.h_fragmemCount[itot]*gsystem.widthTot + itot].r0 = r0;
+			fragmemData.h_fragmems[fragmemData.h_fragmemCount[itot]*gsystem.widthTot + itot].oneOverSigma2 = oneOverSigma2;
+			fragmemData.h_fragmems[fragmemData.h_fragmemCount[itot]*gsystem.widthTot + itot].weight = weight;
 
-		fragmemData.h_fragmemCount[i] ++;
-		fragmemData.h_fragmemCount[j] ++;
+			fragmemData.h_fragmems[fragmemData.h_fragmemCount[jtot]*gsystem.widthTot + jtot].j = itot;
+			fragmemData.h_fragmems[fragmemData.h_fragmemCount[jtot]*gsystem.widthTot + jtot].r0 = r0;
+			fragmemData.h_fragmems[fragmemData.h_fragmemCount[jtot]*gsystem.widthTot + jtot].oneOverSigma2 = oneOverSigma2;
+			fragmemData.h_fragmems[fragmemData.h_fragmemCount[jtot]*gsystem.widthTot + jtot].weight = weight;
+
+			fragmemData.h_fragmemCount[itot] ++;
+			fragmemData.h_fragmemCount[jtot] ++;
+		}
+		fclose(file);
 	}
 
-	fclose(file);
+
 
 	for(i = 0; i < gsystem.Ntot; i++){
 		fragmemData.h_fragmemEnergy[i] = 0.0f;
 	}
-
-	int traj, m, itot;
-	for(traj = 1; traj < parameters.Ntr; traj++){
-		for(i = 0; i < gsystem.N; i++){
-			itot = traj*gsystem.N + i;
-			fragmemData.h_fragmemCount[itot] = fragmemData.h_fragmemCount[i];
-			for(m = 0; m < fragmemData.maxFragmemsPerAtom; m++){
-				fragmemData.h_fragmems[m*gsystem.widthTot + itot].j =
-						fragmemData.h_fragmems[m*gsystem.widthTot + i].j + traj*gsystem.N;
-				fragmemData.h_fragmems[m*gsystem.widthTot + itot].r0 =
-						fragmemData.h_fragmems[m*gsystem.widthTot + i].r0;
-				fragmemData.h_fragmems[m*gsystem.widthTot + itot].oneOverSigma2 =
-						fragmemData.h_fragmems[m*gsystem.widthTot + i].oneOverSigma2;
-				fragmemData.h_fragmems[m*gsystem.widthTot + itot].weight =
-						fragmemData.h_fragmems[m*gsystem.widthTot + i].weight;
-			}
-		}
-	}
-
 
 	cudaMemcpy(fragmemData.d_fragmemCount, fragmemData.h_fragmemCount,
 			gsystem.Ntot*sizeof(int), cudaMemcpyHostToDevice);
