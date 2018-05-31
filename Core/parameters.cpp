@@ -72,7 +72,8 @@ void parseParametersFileNAMD(char* filename, Parameters* parameters){
 	getMaskedParameter(parameters->velFilename, PARAMETER_VEL_FILE, PARAMETER_STRING_UNDEFINED);
 	getMaskedParameter(parameters->forceFieldFilename, PARAMETER_FF_FILE);
 	getMaskedParameter(parameters->topologiesFilename, PARAMETER_TOP_FILE, PARAMETER_STRING_UNDEFINED);
-	getMaskedParameter(parameters->parametersType, PARAMETER_FF_TYPE);
+	getMaskedParameter(parameters->parametersType, PARAMETER_FF_TYPE, DEFAULT_TOP_TYPE);
+	getMaskedParameter(parameters->topologyType, PARAMETER_TOP_TYPE);
 	getMaskedParameter(parameters->restartKey, PARAMETER_RESTART_KEY, PARAMETER_STRING_UNDEFINED);
 
 }

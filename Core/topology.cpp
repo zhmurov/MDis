@@ -60,7 +60,7 @@ void initTopology(){
 		atomIDs[topology.atoms[i].id] = i;
 	}
 
-	if(strncmp("CHARMM", parameters.parametersType, 6) == 0){
+	if(strncmp("CHARMM", parameters.topologyType, 6) == 0){
 		convertAtomTypesCHARMM19(parameters.topologiesFilename, topology.atoms, topology.atomCount);
 	}
 

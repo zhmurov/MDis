@@ -22,8 +22,10 @@
 
 
 #define PARAMETER_FF_TYPE						"paratype"
+#define PARAMETER_TOP_TYPE						"toptype"
 #define PARAMETER_FF_FILE						"parameters"
 #define PARAMETER_TOP_FILE						"topologies"
+#define DEFAULT_TOP_TYPE						"CHARMM"
 
 #define PARAMETER_COORD_FILE					"coordinates"
 #define PARAMETER_VEL_FILE						"velocities"
@@ -429,6 +431,7 @@ typedef struct {
 	char forceFieldFilename[PARAMETER_LENGTH];
 	char topologiesFilename[PARAMETER_LENGTH];
 	char parametersType[PARAMETER_LENGTH];
+	char topologyType[PARAMETER_LENGTH];
 	char dcdFilename[PARAMETER_LENGTH];
 	char restartKey[PARAMETER_LENGTH];
 
